@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Probability Lab · 10 Modules</title>
+<style>
+:root{
+  --bg:#0f1218; --panel:#171b23; --panel2:#1e232d;
+  --txt:#e8ecf1; --mut:#8b95a5; --line:#2a3140;
+  --accent:#f0b429; --run:#4cc9f0; --good:#43d17a; --bad:#f0645c;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+b{color:var(--txt);font-weight:500}
+
+#app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+#sidebar{background:#0b0e14;border-right:1px solid var(--line);
+  padding:22px 18px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{font-size:13px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:4px}
+.brand-sub{font-size:11px;color:var(--mut);letter-spacing:.14em;margin-bottom:26px}
+.modlist{list-style:none;padding:0;margin:0;display:grid;gap:2px}
+.modlist li{padding:9px 11px;font-size:13px;color:#a9b3c2;border-radius:8px;
+  cursor:pointer;transition:.12s;display:flex;align-items:center;gap:8px;
+  border:1px solid transparent}
+.modlist li:hover{background:#151a23;color:var(--txt)}
+.modlist li.active{background:#1a2029;border-color:#2f3644;color:var(--txt)}
+.modlist li.done .tick{background:var(--good);color:#0f1218}
+.modlist li .num{font-variant-numeric:tabular-nums;opacity:.5;font-size:11px;
+  width:16px;flex:0 0 auto}
+.modlist li .tick{margin-left:auto;width:16px;height:16px;border-radius:50%;
+  background:#232a36;display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:#5d6778;flex:0 0 auto}
+.progress{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);
+  font-size:11px;color:var(--mut);letter-spacing:.1em}
+.progress b{color:var(--good);font-weight:500}
+.bar{height:4px;background:#1e232d;border-radius:3px;margin-top:8px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--good);width:0%;
+  transition:width .4s ease}
+
+main{padding:36px 40px 90px;max-width:840px}
+.mod{display:none}
+.mod.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.mod-head{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:26px}
+.mod-head .num{font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:8px}
+.mod-head h1{margin:0 0 10px;font-size:clamp(22px,3vw,30px);font-weight:300}
+.mod-head p{margin:0;font-size:16px;color:#a9b3c2;max-width:640px}
+
+h2{font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--mut);font-weight:500;margin:36px 0 14px}
+p{margin:0 0 14px;font-size:16px;color:#c9d1dc}
+p.lede{font-size:17px;color:var(--txt)}
+
+.card{background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:20px 22px;margin-bottom:14px}
+.card.tight{padding:16px 18px}
+
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.choice{background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+  padding:14px 12px;cursor:pointer;transition:.15s;text-align:left;color:var(--txt);
+  font-family:inherit;font-size:15px}
+.choice:hover:not(:disabled){border-color:#3d4759}
+.choice.on{border-color:var(--accent);background:rgba(240,180,41,.09)}
+.choice.right{border-color:var(--good);background:rgba(67,209,122,.10)}
+.choice.wrong{border-color:var(--bad);background:rgba(240,100,92,.10)}
+.choice:disabled{cursor:default}
+.choice .big{display:block;font-size:20px;font-weight:300;
+  font-variant-numeric:tabular-nums;margin-bottom:3px}
+.choice .sub{font-size:12px;color:var(--mut)}
+
+.formula{background:#11151c;border:1px solid var(--line);border-radius:11px;
+  padding:14px 16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:14px;color:#dbe3ee;line-height:1.85;overflow-x:auto;margin:10px 0}
+.formula .hl{color:var(--accent)}
+.formula .mut{color:var(--mut)}
+.formula .big{font-size:16px}
+
+.chartwrap{position:relative;background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:12px 10px;margin:6px 0}
+canvas{display:block;width:100%}
+.cv200{height:200px}.cv240{height:240px}.cv280{height:280px}.cv320{height:320px}
+.locked{opacity:.35;pointer-events:none;filter:saturate(.4)}
+.lockmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);
+  pointer-events:none}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+  padding:11px 10px;text-align:center}
+.stat .k{font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:4px}
+.stat .v{font-size:19px;font-weight:300;font-variant-numeric:tabular-nums}
+
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+button.act{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:9px;padding:9px 14px;font-size:14px;cursor:pointer;
+  font-family:inherit;transition:.15s;font-variant-numeric:tabular-nums}
+button.act:hover:not(:disabled){border-color:#4a5568;background:#252b36}
+button.act:disabled{opacity:.35;cursor:not-allowed}
+button.act.primary{border-color:var(--run);color:var(--run)}
+button.act.ghost{border-style:dashed}
+button.act.wide{flex:1}
+
+.slider{display:flex;align-items:center;gap:12px;margin:10px 0}
+.slider label{font-size:12px;color:var(--mut);letter-spacing:.1em;
+  text-transform:uppercase;min-width:90px}
+.slider input[type=range]{flex:1;accent-color:var(--accent)}
+.slider .val{font-variant-numeric:tabular-nums;font-size:14px;font-weight:500;
+  min-width:52px;text-align:right}
+
+.toggle{display:inline-flex;align-items:center;gap:8px;margin:8px 0;
+  font-size:13px;color:var(--mut);cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--run);width:16px;height:16px}
+
+.hint{font-size:13px;color:var(--mut);margin-top:10px}
+
+.reveal{display:none;margin-top:14px}
+.reveal.show{display:block}
+.reveal .verdict{font-size:15px;margin-bottom:12px}
+.reveal .verdict b{color:var(--accent)}
+
+.why{display:grid;gap:10px;margin-bottom:14px}
+.why .item{background:var(--panel);border:1px solid var(--line);
+  border-left:2px solid var(--accent);border-radius:0 11px 11px 0;padding:13px 15px}
+.why .item strong{display:block;font-size:14px;font-weight:500;margin-bottom:4px}
+.why .item span{font-size:13.5px;color:#b3bcc9}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);
+  display:none;align-items:center;justify-content:center;z-index:50;
+  backdrop-filter:blur(6px);padding:20px}
+.modal.show{display:flex}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  max-width:520px;width:100%;padding:26px 28px;text-align:center}
+.modal-box h3{margin:0 0 12px;font-size:22px;font-weight:300}
+.modal-box p{margin:0 0 18px;font-size:15px;color:#b3bcc9}
+
+@media (max-width:760px){
+  #app{grid-template-columns:1fr}
+  #sidebar{position:sticky;top:0;height:auto;z-index:20;
+    border-right:none;border-bottom:1px solid var(--line);padding:14px 16px}
+  .brand-sub{display:none}
+  .modlist{display:none}
+  .modlist.open{display:grid;margin-top:12px;grid-template-columns:1fr 1fr}
+  .brand{cursor:pointer}
+  main{padding:24px 18px 70px}
+  .mod-head h1{font-size:22px}
+  .mod-head p{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+<nav id="sidebar">
+  <div class="brand" id="brand">Probability Lab</div>
+  <div class="brand-sub">10 modules · adult self-study</div>
+  <ol class="modlist" id="modlist"></ol>
+  <div class="progress">Completed <b id="pct">0 / 10</b><div class="bar"><i id="bar"></i></div></div>
+</nav>
+<main id="main">
+
+<!-- ==================== M1 ==================== -->
+<section class="mod active" id="m1">
+  <header class="mod-head">
+    <div class="num">Module 1 · 10</div>
+    <h1>The Law of Large Numbers</h1>
+    <p>Why small samples lie, and why patience is the only cure.</p>
+  </header>
+  <p class="lede">Flip a coin ten times and you might get seven heads. Flip it ten thousand times and you will get almost exactly five thousand.</p>
+  <p>Same coin. Same probability. Different sample size. The gap between them is where a great many bad decisions come from.</p>
+
+  <h2>1 · Choose a process</h2>
+  <div class="card">
+    <div class="choices" id="m1-choices">
+      <button class="choice on" data-p="0.5"><span class="big">0.500</span><span class="sub">Fair coin</span></button>
+      <button class="choice" data-p="0.7"><span class="big">0.700</span><span class="sub">Biased coin</span></button>
+      <button class="choice" data-p="0.1667"><span class="big">0.167</span><span class="sub">Rolling a six</span></button>
+    </div>
+    <div class="slider">
+      <label>or set p</label>
+      <input id="m1-ps" type="range" min="5" max="95" value="50" step="1"/>
+      <span class="val" id="m1-pv">0.50</span>
+    </div>
+  </div>
+
+  <h2>2 · Predict before you see</h2>
+  <div class="card">
+    <p>After <b>10 runs</b>, how close will your observed proportion be to the true p?</p>
+    <div class="choices" id="m1-bands">
+      <button class="choice" data-i="0"><span class="big">±0.02</span><span class="sub">almost exact</span></button>
+      <button class="choice" data-i="1"><span class="big">±0.10</span><span class="sub">quite close</span></button>
+      <button class="choice" data-i="2"><span class="big">±0.30</span><span class="sub">roughly close</span></button>
+      <button class="choice" data-i="3"><span class="big">&gt;0.30</span><span class="sub">anywhere</span></button>
+    </div>
+    <p class="hint" id="m1-hint">Tap to commit. The chart unlocks once you do.</p>
+  </div>
+
+  <h2>3 · Run it</h2>
+  <div class="chartwrap">
+    <canvas id="m1-cv" class="cv280"></canvas>
+    <div class="lockmsg" id="m1-lock">Predict first</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">Runs</div><div class="v" id="m1-n">0</div></div>
+    <div class="stat"><div class="k">Hits</div><div class="v" id="m1-h">0</div></div>
+    <div class="stat"><div class="k">Proportion</div><div class="v" id="m1-p">—</div></div>
+  </div>
+  <div class="btns" id="m1-btns">
+    <button class="act" data-n="1" disabled>Run 1</button>
+    <button class="act" data-n="10" disabled>Run 10</button>
+    <button class="act" data-n="100" disabled>Run 100</button>
+    <button class="act primary" data-n="1000" disabled>Run 1,000</button>
+    <button class="act" data-n="10000" disabled>Run 10,000</button>
+    <button class="act ghost" data-n="0" disabled style="margin-left:auto">Reset</button>
+  </div>
+  <label class="toggle"><input type="checkbox" id="m1-ghost"/> Show 20 parallel universes</label>
+  <div class="card reveal" id="m1-reflect"></div>
+
+  <h2>4 · Why this matters</h2>
+  <div class="why">
+    <div class="item"><strong>The house edge is small. The number of hands is enormous.</strong>
+      <span>A casino's advantage on blackjack is under 1%. On one hand that is invisible. Across ten million hands it is a certainty.</span></div>
+    <div class="item"><strong>A poll of 1,000 can predict 40 million votes.</strong>
+      <span>Not because 1,000 is a large fraction, but because noise shrinks with the square root of the sample.</span></div>
+    <div class="item"><strong>A trial of 12 patients tells you almost nothing.</strong>
+      <span>Small trials produce dramatic, publishable, wrong results all the time. That is the mechanism behind the replication crisis.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M2 ==================== -->
+<section class="mod" id="m2">
+  <header class="mod-head">
+    <div class="num">Module 2 · 10</div>
+    <h1>At Least One</h1>
+    <p>The single most common arithmetic error in everyday probability.</p>
+  </header>
+  <p class="lede">"Roll a fair die four times. What is the probability of getting at least one 6?"</p>
+  <p>Nearly every adult answers <b>4/6 ≈ 67%</b>. The correct answer is <b>51.8%</b>. The gap is the whole module.</p>
+
+  <h2>1 · The rule</h2>
+  <div class="card">
+    <p>Something either happens or it doesn't. So the two probabilities must add to 1.</p>
+    <div class="formula"><span class="hl big">P(not A) = 1 − P(A)</span><br>
+      <span class="mut">Equivalently: P(A) + P(not A) = 1</span></div>
+    <p style="margin-top:12px">This is the <b>complement rule</b>. It sounds trivial. It is the entire engine.</p>
+  </div>
+
+  <h2>2 · The trap</h2>
+  <div class="card">
+    <p style="margin-bottom:14px"><b>Roll a fair die four times. P(at least one 6)?</b></p>
+    <div class="choices" id="m2-trap">
+      <button class="choice" data-i="0"><span class="big">4/6 ≈ 67%</span><span class="sub">each roll adds 1/6</span></button>
+      <button class="choice" data-i="1"><span class="big">1/6 ≈ 17%</span><span class="sub">the chance per roll</span></button>
+      <button class="choice" data-i="2"><span class="big">1 − (5/6)⁴ ≈ 52%</span><span class="sub">one minus "no 6 at all"</span></button>
+      <button class="choice" data-i="3"><span class="big">something else</span><span class="sub">my guess isn't here</span></button>
+    </div>
+    <p class="hint" id="m2-hint">Tap the answer you think is right.</p>
+    <div class="reveal" id="m2-reveal"></div>
+  </div>
+
+  <h2>3 · Two curves</h2>
+  <div class="chartwrap">
+    <canvas id="m2-cv" class="cv280"></canvas>
+    <div class="lockmsg" id="m2-lock">Answer the trap first</div>
+  </div>
+  <p class="hint">The red curve (the intuitive method) crosses 1.0 at n=6 and keeps going. A probability can never exceed 1, so the method breaks itself.</p>
+
+  <h2>4 · See the complement</h2>
+  <div class="card">
+    <div class="slider"><label>Rolls</label>
+      <input id="m2-n" type="range" min="1" max="20" value="4" step="1"/>
+      <span class="val" id="m2-nv">4</span></div>
+    <div class="chartwrap" style="margin-top:12px"><canvas id="m2-bar" class="cv200"></canvas></div>
+    <div class="formula" style="margin-top:12px">
+      P(≥1 six) = 1 − (5/6)<span id="m2-pow" class="hl">4</span> = <span id="m2-ans" class="hl">0.5177</span></div>
+  </div>
+
+  <h2>5 · Simulate</h2>
+  <div class="chartwrap"><canvas id="m2-sim" class="cv240"></canvas></div>
+  <div class="stats">
+    <div class="stat"><div class="k">Experiments</div><div class="v" id="m2-sn">0</div></div>
+    <div class="stat"><div class="k">Hits</div><div class="v" id="m2-sh">0</div></div>
+    <div class="stat"><div class="k">Empirical</div><div class="v" id="m2-sp">—</div></div>
+  </div>
+  <div class="btns" id="m2-btns">
+    <button class="act primary" data-n="100">Run 100</button>
+    <button class="act" data-n="1000">Run 1,000</button>
+    <button class="act" data-n="10000">Run 10,000</button>
+    <button class="act ghost" data-n="0" style="margin-left:auto">Reset</button>
+  </div>
+  <div class="card reveal" id="m2-reflect"></div>
+
+  <h2>6 · Why this matters</h2>
+  <div class="why">
+    <div class="item"><strong>"One in a million" happens every day.</strong>
+      <span>Zambia has 20 million people. A 1-in-a-million daily event should be expected roughly twenty times a day. Coincidences are not rare once you multiply over opportunities.</span></div>
+    <div class="item"><strong>Pooled testing saves money.</strong>
+      <span>Pool 20 samples. If negative, all 20 are clear — one test instead of twenty. If prevalence is 1%, P(at least one positive in the pool) = 1 − 0.99²⁰ ≈ 18%. That 18% is the price of the 82% saving.</span></div>
+    <div class="item"><strong>Redundancy in engineering.</strong>
+      <span>Two independent engines failing: 1 − (1−f)². The complement is how safety is engineered.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M3 ==================== -->
+<section class="mod" id="m3">
+  <header class="mod-head">
+    <div class="num">Module 3 · 10</div>
+    <h1>The Two Rules</h1>
+    <p>When to add probabilities, when to multiply, and how to tell the difference.</p>
+  </header>
+  <p class="lede">Almost every probability mistake traces back to using the wrong one of two rules.</p>
+
+  <h2>1 · The rules</h2>
+  <div class="card">
+    <div class="formula"><span class="hl">OR:</span>  P(A or B) = P(A) + P(B) − P(A and B)
+<span class="mut">If A and B cannot both happen: P(A)+P(B)</span>
+
+<span class="hl">AND:</span> P(A and B) = P(A) × P(B | A)
+<span class="mut">If A and B are independent: P(A) × P(B)</span></div>
+  </div>
+
+  <h2>2 · The marble bag</h2>
+  <div class="card">
+    <p>5 red marbles, 5 blue. You draw two, <b>without replacing the first</b>. Predict each.</p>
+
+    <p style="margin-top:16px"><b>Q1. P(both red)?</b></p>
+    <div class="choices" id="m3-q1">
+      <button class="choice" data-i="0"><span class="big">0.25</span><span class="sub">(1/2)(1/2)</span></button>
+      <button class="choice" data-i="1"><span class="big">0.22</span><span class="sub">(5/10)(4/9)</span></button>
+      <button class="choice" data-i="2"><span class="big">0.20</span><span class="sub">2/10</span></button>
+    </div>
+
+    <p style="margin-top:16px"><b>Q2. P(at least one red)?</b></p>
+    <div class="choices" id="m3-q2">
+      <button class="choice" data-i="0"><span class="big">0.50</span><span class="sub">5/10</span></button>
+      <button class="choice" data-i="1"><span class="big">0.75</span><span class="sub">1 − (1/2)(1/2)</span></button>
+      <button class="choice" data-i="2"><span class="big">0.78</span><span class="sub">1 − (5/10)(4/9)</span></button>
+    </div>
+
+    <div class="reveal" id="m3-reveal"></div>
+  </div>
+
+  <h2>3 · Simulate the bag</h2>
+  <p>Run the draw many times and watch the empirical rates converge on the correct answers.</p>
+  <div class="chartwrap"><canvas id="m3-cv" class="cv240"></canvas></div>
+  <div class="stats">
+    <div class="stat"><div class="k">Draws</div><div class="v" id="m3-n">0</div></div>
+    <div class="stat"><div class="k">Both red</div><div class="v" id="m3-br">—</div></div>
+    <div class="stat"><div class="k">≥1 red</div><div class="v" id="m3-ar">—</div></div>
+  </div>
+  <div class="btns" id="m3-btns">
+    <button class="act primary" data-n="1000">Run 1,000</button>
+    <button class="act" data-n="10000">Run 10,000</button>
+    <button class="act ghost" data-n="0" style="margin-left:auto">Reset</button>
+  </div>
+  <div class="card reveal" id="m3-reflect"></div>
+
+  <h2>4 · Why the rules differ</h2>
+  <div class="why">
+    <div class="item"><strong>OR adds. AND multiplies.</strong>
+      <span>Adding counts the union — everything in either circle. Multiplying counts the overlap — only what's in both. Venn diagrams make this obvious; formulas hide it.</span></div>
+    <div class="item"><strong>Without replacement, trials are not independent.</strong>
+      <span>After drawing one red, the bag has 4 red out of 9. Conditional probability is how you track the shift — that's Module 4.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M4 ==================== -->
+<section class="mod" id="m4">
+  <header class="mod-head">
+    <div class="num">Module 4 · 10</div>
+    <h1>Conditional Probability</h1>
+    <p>P(A | B) is not P(B | A). This confusion has cost people their lives.</p>
+  </header>
+  <p class="lede">"Most smokers are adults" and "most adults smoke" describe the same two numbers but mean completely different things.</p>
+
+  <h2>1 · The dataset</h2>
+  <div class="card">
+    <p>1,000 people. 200 are young (under 30). 220 are smokers.</p>
+    <div class="formula" style="font-family:inherit">
+      60 young smokers &nbsp;·&nbsp; 140 young non-smokers<br>
+      160 older smokers &nbsp;·&nbsp; 640 older non-smokers
+    </div>
+  </div>
+
+  <h2>2 · Two different questions</h2>
+  <div class="card">
+    <p><b>Q1. Of young people, what fraction smoke?</b></p>
+    <div class="choices" id="m4-q1">
+      <button class="choice" data-i="0"><span class="big">0.06</span><span class="sub">60/1000</span></button>
+      <button class="choice" data-i="1"><span class="big">0.30</span><span class="sub">60/200</span></button>
+      <button class="choice" data-i="2"><span class="big">0.27</span><span class="sub">60/220</span></button>
+    </div>
+
+    <p style="margin-top:16px"><b>Q2. Of smokers, what fraction are young?</b></p>
+    <div class="choices" id="m4-q2">
+      <button class="choice" data-i="0"><span class="big">0.06</span><span class="sub">60/1000</span></button>
+      <button class="choice" data-i="1"><span class="big">0.30</span><span class="sub">60/200</span></button>
+      <button class="choice" data-i="2"><span class="big">0.27</span><span class="sub">60/220</span></button>
+    </div>
+
+    <div class="reveal" id="m4-reveal"></div>
+  </div>
+
+  <h2>3 · The two-way table</h2>
+  <div class="chartwrap"><canvas id="m4-cv" class="cv280"></canvas></div>
+
+  <h2>4 · Watch the denominator</h2>
+  <div class="card">
+    <p>The only difference between P(young | smoker) and P(smoker | young) is which group you divide by. Toggle to see it.</p>
+    <div class="btns">
+      <button class="act primary" id="m4-b1">P(smoker | young)</button>
+      <button class="act" id="m4-b2">P(young | smoker)</button>
+    </div>
+    <div class="formula" id="m4-formula"></div>
+  </div>
+
+  <h2>5 · Why this matters</h2>
+  <div class="why">
+    <div class="item"><strong>The prosecutor's fallacy.</strong>
+      <span>P(DNA match | innocent) is tiny. P(innocent | DNA match) is not — it depends on the base rate. Conflating these has convicted innocent people.</span></div>
+    <div class="item"><strong>Medical screening.</strong>
+      <span>P(positive | disease) high does not mean P(disease | positive) high. That's Module 5's entire point.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M5 ==================== -->
+<section class="mod" id="m5">
+  <header class="mod-head">
+    <div class="num">Module 5 · 10</div>
+    <h1>Bayes, the Human Way</h1>
+    <p>Why a "95% accurate" test for a rare disease is usually wrong.</p>
+  </header>
+  <p class="lede">A disease affects 1% of people. A test is 95% sensitive and has a 5% false-positive rate. You test positive. What's the chance you actually have it?</p>
+
+  <h2>1 · The natural-frequency view</h2>
+  <p>Imagine 10,000 people. Draw them. This is the version of Bayes that humans actually grasp.</p>
+  <div class="chartwrap"><canvas id="m5-cv" class="cv320"></canvas></div>
+
+  <h2>2 · The number that matters</h2>
+  <div class="formula" id="m5-formula2">
+    P(disease | positive) = 95 / (95 + 495) = <span class="hl">0.161</span></div>
+  <p>Yes — a positive result on a "95% accurate" test gives you a <b>16%</b> chance of disease. Because 99 out of 100 people don't have it, and 5% of those healthy people false-alarm.</p>
+
+  <h2>3 · Turn the dials</h2>
+  <div class="card">
+    <div class="slider"><label>Prevalence</label>
+      <input id="m5-prev" type="range" min="1" max="200" value="10" step="1"/>
+      <span class="val" id="m5-prevv">1.0%</span></div>
+    <div class="slider"><label>Sensitivity</label>
+      <input id="m5-sens" type="range" min="50" max="100" value="95" step="1"/>
+      <span class="val" id="m5-sensv">95%</span></div>
+    <div class="slider"><label>Specificity</label>
+      <input id="m5-spec" type="range" min="80" max="100" value="95" step="1"/>
+      <span class="val" id="m5-specv">95%</span></div>
+    <div class="formula" id="m5-formula"></div>
+  </div>
+
+  <h2>4 · Why this matters</h2>
+  <div class="why">
+    <div class="item"><strong>Mass screening for rare conditions does this every day.</strong>
+      <span>Even a good test on a rare disease produces mostly false positives. This is why mammograms at 40 in low-risk women are debated.</span></div>
+    <div class="item"><strong>Bayes is how belief updates.</strong>
+      <span>Your prior times the likelihood of evidence, divided by the total probability of the evidence. That's it. Bayes' theorem is the complement rule plus the multiplication rule.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M6 ==================== -->
+<section class="mod" id="m6">
+  <header class="mod-head">
+    <div class="num">Module 6 · 10</div>
+    <h1>Monty Hall</h1>
+    <p>Three doors. The most famous counterintuition in probability.</p>
+  </header>
+  <p class="lede">You pick a door. The host — who knows where the prize is — opens a different door with a goat. Do you switch, or stay?</p>
+
+  <h2>1 · Play it</h2>
+  <div class="card" id="m6-game">
+    <p>Pick a door. The host will open a goat door. Then decide.</p>
+    <div class="choices" id="m6-doors" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
+      <button class="choice" data-door="0" style="text-align:center;font-size:38px;padding:24px 8px">🚪<div class="sub" style="margin-top:6px">Door 1</div></button>
+      <button class="choice" data-door="1" style="text-align:center;font-size:38px;padding:24px 8px">🚪<div class="sub" style="margin-top:6px">Door 2</div></button>
+      <button class="choice" data-door="2" style="text-align:center;font-size:38px;padding:24px 8px">🚪<div class="sub" style="margin-top:6px">Door 3</div></button>
+    </div>
+    <p class="hint" id="m6-msg">Pick a door to begin.</p>
+    <div class="btns" id="m6-actions" style="display:none">
+      <button class="act wide primary" id="m6-stay">Stay</button>
+      <button class="act wide" id="m6-switch">Switch</button>
+    </div>
+  </div>
+
+  <h2>2 · Your record</h2>
+  <div class="stats">
+    <div class="stat"><div class="k">Played</div><div class="v" id="m6-pl">0</div></div>
+    <div class="stat"><div class="k">Stayed · won</div><div class="v" id="m6-sw">0/0</div></div>
+    <div class="stat"><div class="k">Switched · won</div><div class="v" id="m6-sww">0/0</div></div>
+  </div>
+
+  <h2>3 · Prove it</h2>
+  <p>Simulate 10,000 games with each strategy.</p>
+  <div class="btns" id="m6-btns">
+    <button class="act primary" id="m6-sim">Run 10,000 of each</button>
+    <button class="act ghost" id="m6-reset" style="margin-left:auto">Reset</button>
+  </div>
+  <div class="chartwrap"><canvas id="m6-cv" class="cv240"></canvas></div>
+  <div class="card reveal" id="m6-reflect"></div>
+
+  <h2>4 · Why switching wins</h2>
+  <div class="why">
+    <div class="item"><strong>Your first pick wins 1/3 of the time.</strong>
+      <span>Nothing the host does changes that. So the other unopened door must win the remaining 2/3.</span></div>
+    <div class="item"><strong>The host's choice carries information.</strong>
+      <span>He cannot open the prize door. If you picked wrong (2/3 chance), the door he leaves closed is the winner. Switching flips your win probability from 1/3 to 2/3.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M7 ==================== -->
+<section class="mod" id="m7">
+  <header class="mod-head">
+    <div class="num">Module 7 · 10</div>
+    <h1>The Birthday Paradox</h1>
+    <p>23 people. 50% chance of a shared birthday. It does not feel true.</p>
+  </header>
+  <p class="lede">How many people in a room before there's a better-than-even chance that two share a birthday?</p>
+
+  <h2>1 · Predict</h2>
+  <div class="card">
+    <div class="choices" id="m7-guess">
+      <button class="choice" data-i="0"><span class="big">23</span><span class="sub">a small room</span></button>
+      <button class="choice" data-i="1"><span class="big">57</span><span class="sub">half the year</span></button>
+      <button class="choice" data-i="2"><span class="big">183</span><span class="sub">half of 365</span></button>
+      <button class="choice" data-i="3"><span class="big">366</span><span class="sub">pigeonhole</span></button>
+    </div>
+    <div class="reveal" id="m7-reveal"></div>
+  </div>
+
+  <h2>2 · The curve</h2>
+  <div class="chartwrap"><canvas id="m7-cv" class="cv280"></canvas></div>
+
+  <h2>3 · Try a room size</h2>
+  <div class="card">
+    <div class="slider"><label>People</label>
+      <input id="m7-n" type="range" min="2" max="80" value="23" step="1"/>
+      <span class="val" id="m7-nv">23</span></div>
+    <div class="formula" id="m7-formula"></div>
+    <div class="btns">
+      <button class="act primary" id="m7-sim">Simulate 1,000 rooms of this size</button>
+    </div>
+    <div class="stats" style="margin-top:12px">
+      <div class="stat"><div class="k">Rooms</div><div class="v" id="m7-rooms">0</div></div>
+      <div class="stat"><div class="k">With match</div><div class="v" id="m7-hits">0</div></div>
+      <div class="stat"><div class="k">Empirical</div><div class="v" id="m7-emp">—</div></div>
+    </div>
+  </div>
+
+  <h2>4 · The complement again</h2>
+  <div class="card">
+    <p>This is Module 2 in disguise.</p>
+    <div class="formula">P(≥1 shared birthday) = 1 − P(all different)<br>
+      <span class="mut">= 1 − (365/365)(364/365)(363/365)…  up to n terms</span></div>
+    <p style="margin-top:8px">23 people is 253 <b>pairs</b>. That's the number that matters — not 23.</p>
+  </div>
+</section>
+
+<!-- ==================== M8 ==================== -->
+<section class="mod" id="m8">
+  <header class="mod-head">
+    <div class="num">Module 8 · 10</div>
+    <h1>Expected Value</h1>
+    <p>The one number that tells you what will happen if you keep playing.</p>
+  </header>
+  <p class="lede">Roll a fair die. If it shows the face value, you win that many kwacha. It costs 3 to play. Should you?</p>
+
+  <h2>1 · The math</h2>
+  <div class="card">
+    <div class="formula">E[X] = Σ p(x) · x<br>
+      <span class="mut">= (1+2+3+4+5+6)/6 = 3.50</span><br>
+      Net = 3.50 − 3.00 = <span class="hl">+0.50 per game</span></div>
+    <p style="margin-top:8px">Positive — you should play. On average. Over many games.</p>
+  </div>
+
+  <h2>2 · One game feels random</h2>
+  <div class="btns" id="m8-btns">
+    <button class="act" id="m8-one">Play 1</button>
+    <button class="act primary" id="m8-hundred">Play 100</button>
+    <button class="act" id="m8-thousand">Play 1,000</button>
+    <button class="act" id="m8-tenk">Play 10,000</button>
+    <button class="act ghost" id="m8-reset" style="margin-left:auto">Reset</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">Games</div><div class="v" id="m8-n">0</div></div>
+    <div class="stat"><div class="k">Total profit</div><div class="v" id="m8-tot">0</div></div>
+    <div class="stat"><div class="k">Per game</div><div class="v" id="m8-avg">—</div></div>
+  </div>
+  <div class="chartwrap"><canvas id="m8-cv" class="cv240"></canvas></div>
+
+  <h2>3 · Real-world EVs</h2>
+  <div class="why">
+    <div class="item"><strong>Every casino game has negative EV — for you.</strong>
+      <span>That is the entire business model. The house does not need to win any given hand; it only needs a positive expected value and enough hands.</span></div>
+    <div class="item"><strong>Insurance has negative EV for you and that's fine.</strong>
+      <span>You are not buying expected value. You are buying the removal of a tail-risk outcome you cannot absorb. EV is not the same as rationality.</span></div>
+    <div class="item"><strong>Investing is EV versus variance.</strong>
+      <span>Two strategies with the same EV can be radically different in what they do to your life.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M9 ==================== -->
+<section class="mod" id="m9">
+  <header class="mod-head">
+    <div class="num">Module 9 · 10</div>
+    <h1>Distributions</h1>
+    <p>Why the bell curve shows up everywhere, and where it comes from.</p>
+  </header>
+  <p class="lede">Toss a biased coin n times. Count the heads. Do it for many n. Watch the shape that emerges.</p>
+
+  <h2>1 · Binomial in action</h2>
+  <div class="card">
+    <div class="slider"><label>Trials n</label>
+      <input id="m9-n" type="range" min="2" max="200" value="20" step="1"/>
+      <span class="val" id="m9-nv">20</span></div>
+    <div class="slider"><label>Probability p</label>
+      <input id="m9-p" type="range" min="5" max="95" value="50" step="1"/>
+      <span class="val" id="m9-pv">0.50</span></div>
+  </div>
+
+  <h2>2 · The distribution</h2>
+  <div class="chartwrap"><canvas id="m9-cv" class="cv320"></canvas></div>
+  <p class="hint">Amber bars: exact binomial probabilities. Blue curve: the normal approximation N(np, np(1−p)). As n grows, the approximation gets better — that's the Central Limit Theorem.</p>
+
+  <h2>3 · The numbers</h2>
+  <div class="stats">
+    <div class="stat"><div class="k">Mean</div><div class="v" id="m9-mean">—</div></div>
+    <div class="stat"><div class="k">Std dev</div><div class="v" id="m9-sd">—</div></div>
+    <div class="stat"><div class="k">P(±1σ)</div><div class="v" id="m9-sigma">—</div></div>
+  </div>
+
+  <h2>4 · Why this matters</h2>
+  <div class="why">
+    <div class="item"><strong>Sampling error is measurable.</strong>
+      <span>A poll of 1,000 people has a margin of error of about ±3%. That's ±2 standard deviations, from the same formula as here.</span></div>
+    <div class="item"><strong>Real-world data is not always normal.</strong>
+      <span>Incomes, city sizes, and wealth follow power laws — not bell curves. Applying normal methods to them produces confident nonsense.</span></div>
+  </div>
+</section>
+
+<!-- ==================== M10 ==================== -->
+<section class="mod" id="m10">
+  <header class="mod-head">
+    <div class="num">Module 10 · 10</div>
+    <h1>Fallacies &amp; Traps</h1>
+    <p>Three errors that catch smart people repeatedly. Learn to see them.</p>
+  </header>
+
+  <h2>1 · The gambler's fallacy</h2>
+  <div class="card">
+    <p>A fair roulette wheel has landed on red five times in a row. What is the chance the next spin is black?</p>
+    <div class="choices" id="m10-q1">
+      <button class="choice" data-i="0"><span class="big">&gt; 50%</span><span class="sub">black is "due"</span></button>
+      <button class="choice" data-i="1"><span class="big">50%</span><span class="sub">independent trials</span></button>
+      <button class="choice" data-i="2"><span class="big">&lt; 50%</span><span class="sub">red is hot</span></button>
+    </div>
+    <div class="reveal" id="m10-r1"></div>
+  </div>
+
+  <h2>2 · The conjunction fallacy</h2>
+  <div class="card">
+    <p>Linda is 31, outspoken, and very bright. She studied philosophy. As a student she was deeply concerned with discrimination and social justice.</p>
+    <p style="margin-top:12px"><b>Which is more likely?</b></p>
+    <div class="choices" id="m10-q2">
+      <button class="choice" data-i="0"><span class="big">A</span><span class="sub">Linda is a bank teller</span></button>
+      <button class="choice" data-i="1"><span class="big">B</span><span class="sub">Linda is a bank teller and active in the feminist movement</span></button>
+    </div>
+    <div class="reveal" id="m10-r2"></div>
+  </div>
+
+  <h2>3 · The base-rate fallacy</h2>
+  <div class="card">
+    <p>In a city of 100,000, one person in 1,000 has a rare disease. A test is 99% accurate (99% sensitivity, 99% specificity). You test positive. What's the chance you actually have it?</p>
+    <div class="choices" id="m10-q3">
+      <button class="choice" data-i="0"><span class="big">99%</span><span class="sub">as accurate as the test</span></button>
+      <button class="choice" data-i="1"><span class="big">90%</span><span class="sub">near-certain</span></button>
+      <button class="choice" data-i="2"><span class="big">≈ 9%</span><span class="sub">much lower</span></button>
+    </div>
+    <div class="reveal" id="m10-r3"></div>
+  </div>
+
+  <h2>4 · You are done</h2>
+  <div class="why">
+    <div class="item"><strong>What you've learned</strong>
+      <span>Sample size and convergence (1), complement rule (2), addition and multiplication (3), conditioning and Bayes (4–5), counterintuition (6–7), long-run averages (8), and where all this comes from mathematically (9).</span></div>
+    <div class="item"><strong>What's next</strong>
+      <span>Real data. Take the same questions you've learned and apply them to actual numbers from ZAMSTATS, hospital records, football results, or lottery draws. Theory becomes skill through application.</span></div>
+    <div class="item"><strong>One habit to keep</strong>
+      <span>Before accepting any probability claim, ask: <em>what is the sample size</em>, <em>what is the base rate</em>, and <em>is this conditional probability being stated backwards</em>. Those three questions catch 90% of everyday errors.</span></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3 id="modal-h">Module complete</h3>
+    <p id="modal-p"></p>
+    <div class="btns" style="justify-content:center">
+      <button class="act primary" id="modal-next">Next module →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============== ERROR REPORTER ============== */
+window.addEventListener('error', function(e){
+  try{
+    var el = document.createElement('pre');
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:#7a1111;color:#fff;padding:12px;font-size:12px;white-space:pre-wrap;max-height:40vh;overflow:auto;margin:0';
+    el.textContent = 'ERROR: ' + e.message + '\\n' + (e.filename||'') + ':' + (e.lineno||'') + ':' + (e.colno||'');
+    document.body.appendChild(el);
+  }catch(_){}
+});
+
+/* ============== UTILS ============== */
+var $ = function(sel, r){
+  r = r || document;
+  if (typeof sel !== 'string') return null;
+  if (/^#[A-Za-z0-9_-]+$/.test(sel)) return r.getElementById(sel.slice(1));
+  if (sel.charAt(0) === '#' || /[\s\[\.]/.test(sel)) return r.querySelector(sel);
+  return r.getElementById(sel);
+};
+var $$ = function(sel, r){ r = r || document; return Array.prototype.slice.call(r.querySelectorAll(sel)); };
+var fmt = function(n, d){ return Number(n).toFixed(d == null ? 4 : d); };
+var rand = Math.random;
+
+function setupCanvas(canvas){
+  var dpr = window.devicePixelRatio || 1;
+  var W = canvas.clientWidth || 400;
+  var H = canvas.clientHeight || 200;
+  canvas.width = Math.max(1, Math.round(W * dpr));
+  canvas.height = Math.max(1, Math.round(H * dpr));
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx: ctx, W: W, H: H, dpr: dpr };
+}
+function drawLine(ctx, x1, y1, x2, y2, col, w, dash){
+  ctx.save();
+  if (dash) ctx.setLineDash(dash);
+  ctx.strokeStyle = col || '#232a36';
+  ctx.lineWidth = w == null ? 1 : w;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.restore();
+}
+function dashLine(ctx, x1, y1, x2, y2, col, w){
+  drawLine(ctx, x1, y1, x2, y2, col, w, [5, 5]);
+}
+function text(ctx, str, x, y, opts){
+  opts = opts || {};
+  ctx.save();
+  ctx.fillStyle = opts.color || '#8b95a5';
+  var size = opts.size || 11;
+  var mono = opts.mono !== false;
+  ctx.font = (opts.weight || 400) + ' ' + size + 'px ' + (mono ? 'ui-monospace,SFMono-Regular,Menlo,monospace' : '-apple-system,sans-serif');
+  ctx.textAlign = opts.align || 'left';
+  ctx.textBaseline = opts.baseline || 'top';
+  ctx.fillText(str, x, y);
+  ctx.restore();
+}
+function dot(ctx, x, y, r, fill, stroke, sw){
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  if (fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = sw || 1; ctx.stroke(); }
+}
+
+/* ============== ROUTER + PROGRESS ============== */
+var ORDER = ['m1','m2','m3','m4','m5','m6','m7','m8','m9','m10'];
+var TITLES = {
+  m1:'Law of Large Numbers', m2:'At Least One', m3:'The Two Rules',
+  m4:'Conditional Probability', m5:'Bayes, the Human Way',
+  m6:'Monty Hall', m7:'The Birthday Paradox', m8:'Expected Value',
+  m9:'Distributions', m10:'Fallacies & Traps'
+};
+var PROGRESS_KEY = 'problab.done.v2';
+var doneSet = new Set();
+try { doneSet = new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')); } catch(_){}
+var current = 'm1';
+var MODULES = {};
+
+function buildNav(){
+  var list = $('modlist');
+  var html = '';
+  for (var i = 0; i < ORDER.length; i++){
+    var id = ORDER[i];
+    html += '<li data-mod="' + id + '"><span class="num">' + (i + 1) + '</span>' + TITLES[id] + '<span class="tick">✓</span></li>';
+  }
+  list.innerHTML = html;
+  $$('#modlist li').forEach(function(li){
+    li.onclick = function(){
+      show(li.dataset.mod);
+      if (window.innerWidth < 760) list.classList.remove('open');
+    };
+  });
+  if (window.innerWidth < 760) $('brand').onclick = function(){ list.classList.toggle('open'); };
+  updateProgress();
+}
+function markDone(id){
+  if (doneSet.has(id)) return;
+  doneSet.add(id);
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(Array.from(doneSet))); } catch(_){}
+  updateProgress();
+}
+function updateProgress(){
+  $$('#modlist li').forEach(function(li){ li.classList.toggle('done', doneSet.has(li.dataset.mod)); });
+  $('pct').textContent = doneSet.size + ' / 10';
+  $('bar').style.width = (doneSet.size * 10) + '%';
+}
+function show(id){
+  if (ORDER.indexOf(id) === -1) id = 'm1';
+  current = id;
+  $$('.mod').forEach(function(m){ m.classList.toggle('active', m.id === id); });
+  $$('#modlist li').forEach(function(li){ li.classList.toggle('active', li.dataset.mod === id); });
+  window.scrollTo(0, 0);
+  try { history.replaceState(null, '', '#' + id); } catch(_){}
+  var mod = MODULES[id];
+  if (mod && mod.onShow) mod.onShow();
+}
+function showCompleteModal(title){
+  $('modal-h').textContent = 'Module complete';
+  $('modal-p').textContent = 'You finished "' + title + '". Nice work.';
+  $('modal').classList.add('show');
+  var idx = ORDER.indexOf(current);
+  var nextId = ORDER[idx + 1];
+  $('modal-next').textContent = nextId ? 'Next module →' : 'Back to top';
+  $('modal-next').onclick = function(){
+    $('modal').classList.remove('show');
+    show(nextId || 'm1');
+  };
+}
+$('modal').onclick = function(e){ if (e.target.id === 'modal') e.target.classList.remove('show'); };
+
+/* ============== M1 ============== */
+MODULES.m1 = (function(){
+  var MAXN = 100000;
+  var cv = $('m1-cv');
+  var S = { p: 0.5, n: 0, heads: 0, path: [], pAt10: null, predicted: null, animating: false, ghosts: null, ghostsFor: null };
+
+  function geom(){
+    var g = setupCanvas(cv);
+    var pad = { l: 42, r: 14, t: 16, b: 26 };
+    return { ctx: g.ctx, W: g.W, H: g.H, pad: pad, pw: g.W - pad.l - pad.r, ph: g.H - pad.t - pad.b };
+  }
+  function xOf(n, g){ return g.pad.l + g.pw * (Math.log10(Math.max(n, 1)) / Math.log10(MAXN)); }
+  function yOf(v, g){ return g.pad.t + g.ph * (1 - Math.max(0, Math.min(1, v))); }
+
+  function draw(){
+    var g = geom(); var ctx = g.ctx;
+    ctx.clearRect(0, 0, g.W, g.H);
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var y = Math.round(yOf(v, g)) + .5;
+      drawLine(ctx, g.pad.l, y, g.pad.l + g.pw, y);
+    });
+    [1, 10, 100, 1000, 10000, 100000].forEach(function(n){
+      var x = Math.round(xOf(n, g)) + .5;
+      drawLine(ctx, x, g.pad.t, x, g.pad.t + g.ph);
+    });
+    [0, .5, 1].forEach(function(v){ text(ctx, v.toFixed(2), g.pad.l - 7, yOf(v, g), {align: 'right', baseline: 'middle'}); });
+    [1, 10, 100, '1k', '10k', '100k'].forEach(function(l, i){
+      text(ctx, l, xOf(Math.pow(10, i), g), g.pad.t + g.ph + 7, {align: 'center'});
+    });
+
+    if (S.n > 0){
+      ctx.save();
+      ctx.beginPath();
+      var N = 140;
+      for (var i = 0; i <= N; i++){
+        var n = Math.pow(10, i / N * 5);
+        var sd = Math.sqrt(S.p * (1 - S.p) / n);
+        var xx = xOf(n, g), yy = yOf(S.p + 2 * sd, g);
+        if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+      }
+      for (var j = N; j >= 0; j--){
+        var n2 = Math.pow(10, j / N * 5);
+        var sd2 = Math.sqrt(S.p * (1 - S.p) / n2);
+        ctx.lineTo(xOf(n2, g), yOf(S.p - 2 * sd2, g));
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(240,180,41,.075)';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    dashLine(ctx, g.pad.l, yOf(S.p, g), g.pad.l + g.pw, yOf(S.p, g), 'rgba(240,180,41,.75)', 1.5);
+    text(ctx, 'true p = ' + S.p.toFixed(3), g.pad.l + 6, yOf(S.p, g) - 4, {color: 'rgba(240,180,41,.9)', size: 10, baseline: 'bottom'});
+
+    if (S.ghosts && S.ghostsFor === S.p && S.n > 0){
+      ctx.save(); ctx.globalAlpha = .18; ctx.strokeStyle = '#4cc9f0'; ctx.lineWidth = 1;
+      S.ghosts.forEach(function(pts){
+        ctx.beginPath();
+        var started = false;
+        for (var k = 0; k < pts.length; k++){
+          var n = pts[k][0], v = pts[k][1];
+          if (n > S.n) break;
+          var xx = xOf(n, g), yy = yOf(v, g);
+          if (!started){ ctx.moveTo(xx, yy); started = true; } else ctx.lineTo(xx, yy);
+        }
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    if (S.path.length){
+      ctx.save();
+      ctx.strokeStyle = '#4cc9f0'; ctx.lineWidth = 1.75; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath();
+      var lastX = -1, started2 = false;
+      for (var i2 = 0; i2 < S.path.length; i2++){
+        var pn = S.path[i2][0], pv = S.path[i2][1];
+        var x2 = xOf(pn, g);
+        if (x2 - lastX >= 0.75 || i2 === S.path.length - 1){
+          var y2 = yOf(pv, g);
+          if (!started2){ ctx.moveTo(x2, y2); started2 = true; } else ctx.lineTo(x2, y2);
+          lastX = x2;
+        }
+      }
+      ctx.stroke();
+      ctx.restore();
+      var lpt = S.path[S.path.length - 1];
+      dot(ctx, xOf(lpt[0], g), yOf(lpt[1], g), 4.5, '#0f1218');
+      dot(ctx, xOf(lpt[0], g), yOf(lpt[1], g), 3, '#4cc9f0');
+    }
+  }
+
+  function stats(){
+    $('m1-n').textContent = S.n.toLocaleString();
+    $('m1-h').textContent = S.heads.toLocaleString();
+    $('m1-p').textContent = S.n ? (S.heads / S.n).toFixed(4) : '—';
+  }
+  function one(){
+    S.n++;
+    if (rand() < S.p) S.heads++;
+    S.path.push([S.n, S.heads / S.n]);
+    if (S.n === 10) S.pAt10 = S.heads / S.n;
+  }
+  function setBtns(dis){
+    $$('#m1-btns .act').forEach(function(b){
+      if (b.dataset.n === '0') return;
+      b.disabled = dis || S.predicted === null;
+    });
+  }
+  function unlock(){
+    $('m1-lock').style.display = 'none';
+    $('#m1-btns .act[data-n="0"]').disabled = false;
+    setBtns(false);
+    draw();
+  }
+  function flipBatch(count){
+    if (S.animating) return;
+    if (count === 0){ reset(); return; }
+    if (count < 100){
+      for (var i = 0; i < count; i++) one();
+      draw(); stats(); after();
+      return;
+    }
+    S.animating = true; setBtns(true);
+    var rem = count;
+    var chunk = Math.max(1, Math.ceil(count / 80));
+    (function step(){
+      var c = Math.min(chunk, rem);
+      for (var i = 0; i < c; i++) one();
+      rem -= c;
+      draw(); stats();
+      if (rem > 0) requestAnimationFrame(step);
+      else { S.animating = false; setBtns(false); after(); }
+    })();
+  }
+  function after(){
+    if (S.n >= 10 && S.predicted !== null && !$('m1-reflect').dataset.done){
+      $('m1-reflect').dataset.done = '1';
+      renderReflection();
+      markDone('m1');
+      setTimeout(function(){ showCompleteModal('Law of Large Numbers'); }, 800);
+    }
+  }
+  function renderReflection(){
+    var d = Math.abs(S.pAt10 - S.p);
+    var actual = d <= .02 ? 0 : d <= .10 ? 1 : d <= .30 ? 2 : 3;
+    var labels = ['within 0.02', 'within 0.10', 'within 0.30', 'further than 0.30'];
+    var v;
+    if (S.predicted === actual) v = 'You predicted <b>' + labels[S.predicted] + '</b>. Actual deviation: <b>' + d.toFixed(2) + '</b>. Called it.';
+    else if (S.predicted < actual) v = 'You predicted <b>' + labels[S.predicted] + '</b>, but the deviation was <b>' + d.toFixed(2) + '</b>. Small samples are noisier than they feel.';
+    else v = 'You predicted <b>' + labels[S.predicted] + '</b>, but the deviation was only <b>' + d.toFixed(2) + '</b>. Luck. Run again and it will usually be wider.';
+    var now = S.n ? S.heads / S.n : 0;
+    var el = $('m1-reflect');
+    el.classList.add('show');
+    el.innerHTML = '<div class="verdict">' + v + '</div>' +
+      '<p style="font-size:15px;color:#b3bcc9;margin:0">Runs: <b>' + S.n.toLocaleString() +
+      '</b> · Observed: <b>' + now.toFixed(4) + '</b> · True: <b style="color:var(--accent)">' + S.p.toFixed(4) +
+      '</b>. The amber cone is the ±2σ range — it narrows as 1/√n.</p>';
+  }
+  function buildGhosts(){
+    var samples = [];
+    for (var i = 0; i <= 130; i++) samples.push(Math.round(Math.pow(10, i / 130 * 5)));
+    var out = [];
+    for (var g = 0; g < 20; g++){
+      var pts = [], heads = 0, si = 0;
+      for (var n = 1; n <= MAXN; n++){
+        if (rand() < S.p) heads++;
+        if (n === samples[si]){ pts.push([n, heads / n]); si++; if (si >= samples.length) break; }
+      }
+      out.push(pts);
+    }
+    S.ghosts = out; S.ghostsFor = S.p;
+  }
+  function reset(){
+    S.n = 0; S.heads = 0; S.path = []; S.pAt10 = null;
+    S.ghosts = null; S.ghostsFor = null;
+    $('m1-reflect').classList.remove('show');
+    $('m1-reflect').dataset.done = '';
+    $('m1-ghost').checked = false;
+    stats(); draw();
+  }
+
+  $$('#m1-choices .choice').forEach(function(b){
+    b.onclick = function(){
+      $$('#m1-choices .choice').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      S.p = parseFloat(b.dataset.p);
+      $('m1-ps').value = Math.round(S.p * 100);
+      $('m1-pv').textContent = S.p.toFixed(2);
+      reset();
+    };
+  });
+  $('m1-ps').oninput = function(e){
+    S.p = parseInt(e.target.value, 10) / 100;
+    $('m1-pv').textContent = S.p.toFixed(2);
+    $$('#m1-choices .choice').forEach(function(x){ x.classList.remove('on'); });
+    reset();
+  };
+  $$('#m1-bands .choice').forEach(function(b){
+    b.onclick = function(){
+      $$('#m1-bands .choice').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      S.predicted = parseInt(b.dataset.i, 10);
+      $('m1-hint').textContent = 'Locked in. Now run it and watch.';
+      unlock();
+    };
+  });
+  $$('#m1-btns .act').forEach(function(b){
+    b.onclick = function(){ flipBatch(parseInt(b.dataset.n, 10)); };
+  });
+  $('m1-ghost').onchange = function(e){
+    if (e.target.checked){ buildGhosts(); draw(); }
+    else { S.ghosts = null; draw(); }
+  };
+
+  $('m1-pv').textContent = S.p.toFixed(2);
+  stats(); draw(); setBtns(false);
+  return { onShow: function(){ draw(); } };
+})();
+
+/* ============== M2 ============== */
+MODULES.m2 = (function(){
+  var S = { n: 4, trap: null, simExps: 0, simHits: 0, simPath: [], animating: false };
+
+  $$('#m2-trap .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.trap !== null) return;
+      var i = parseInt(b.dataset.i, 10);
+      S.trap = i;
+      var correct = 2;
+      $$('#m2-trap .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(i === correct ? 'right' : 'wrong');
+      if (i !== correct) $('#m2-trap .choice[data-i="' + correct + '"]').classList.add('right');
+      $('m2-hint').textContent = i === correct ? 'Correct.' : 'Not quite — see below.';
+      renderReveal(i);
+      $('m2-lock').style.display = 'none';
+      $('m2-cv').classList.remove('locked');
+      drawCurve();
+    };
+  });
+  function renderReveal(pick){
+    var pNone = Math.pow(5 / 6, 4);
+    var pAtLeast = 1 - pNone;
+    var v;
+    if (pick === 2) v = '<p>Correct. P(at least one 6) = <b>' + pAtLeast.toFixed(4) + '</b>. The intuitive 4/6 overcounts because the four single-roll events overlap.</p>';
+    else if (pick === 0) v = '<p>The intuitive answer — adding 1/6 four times — gives 0.6667. The true value is <b>' + pAtLeast.toFixed(4) + '</b>. That is a 15-point error and it grows worse as n grows.</p>';
+    else if (pick === 1) v = '<p>1/6 is the chance on one roll. Across four rolls it is <b>' + pAtLeast.toFixed(4) + '</b>. The clean way to combine trials is the complement.</p>';
+    else v = '<p>The correct answer is <b>' + pAtLeast.toFixed(4) + '</b>: 1 − P(no 6) = 1 − (5/6)⁴.</p>';
+    var el = $('m2-reveal');
+    el.classList.add('show');
+    el.innerHTML = v + '<div class="formula"><span class="mut">Wrong way:</span> 4 × (1/6) = <span style="color:var(--bad)">0.6667</span><br><span class="mut">Right way:</span> 1 − (5/6)⁴ = <span class="hl">' + pAtLeast.toFixed(4) + '</span></div>';
+  }
+
+  var cv = $('m2-cv');
+  function drawCurve(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    var pad = { l: 42, r: 14, t: 16, b: 28 };
+    var pw = g.W - pad.l - pad.r, ph = g.H - pad.t - pad.b;
+    function xOf(n){ return pad.l + pw * ((n - 1) / 19); }
+    function yOf(v){ return pad.t + ph * (1 - Math.max(0, Math.min(1.05, v)) / 1.05); }
+    ctx.clearRect(0, 0, g.W, g.H);
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var y = Math.round(yOf(v)) + .5;
+      drawLine(ctx, pad.l, y, pad.l + pw, y);
+    });
+    [1, 5, 10, 15, 20].forEach(function(n){
+      var x = Math.round(xOf(n)) + .5;
+      drawLine(ctx, x, pad.t, x, pad.t + ph);
+    });
+    [0, .5, 1].forEach(function(v){ text(ctx, v.toFixed(2), pad.l - 7, yOf(v), {align: 'right', baseline: 'middle'}); });
+    [1, 5, 10, 15, 20].forEach(function(n){ text(ctx, n, xOf(n), pad.t + ph + 7, {align: 'center'}); });
+
+    ctx.save(); ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(240,100,92,.6)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (var n = 1; n <= 20; n++){
+      var x = xOf(n), y = yOf(n / 6);
+      if (n === 1) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+
+    ctx.strokeStyle = '#f0b429'; ctx.lineWidth = 2.25;
+    ctx.beginPath();
+    for (var n2 = 1; n2 <= 20; n2++){
+      var v = 1 - Math.pow(5 / 6, n2);
+      var x2 = xOf(n2), y2 = yOf(v);
+      if (n2 === 1) ctx.moveTo(x2, y2); else ctx.lineTo(x2, y2);
+    }
+    ctx.stroke();
+
+    var cn = S.n;
+    if (cn >= 1 && cn <= 20){
+      var vv = 1 - Math.pow(5 / 6, cn);
+      dot(ctx, xOf(cn), yOf(vv), 5.5, '#0f1218');
+      dot(ctx, xOf(cn), yOf(vv), 3.5, '#f0b429');
+    }
+    text(ctx, '● 1 − (5/6)ⁿ correct', 16, 14, {color: '#f0b429', size: 11});
+    text(ctx, '■ n/6 wrong', 170, 14, {color: '#f0645c', size: 11});
+  }
+
+  var bar = $('m2-bar');
+  function drawBar(){
+    var g = setupCanvas(bar); var ctx = g.ctx;
+    var pad = { l: 20, r: 20, t: 18, b: 22 };
+    var pw = g.W - pad.l - pad.r;
+    var barY = pad.t + 6, barH = 34;
+    ctx.clearRect(0, 0, g.W, g.H);
+
+    var pNone = Math.pow(5 / 6, S.n);
+    var pAtLeast = 1 - pNone;
+    var xNone = pad.l + pw * pNone;
+    var xFull = pad.l + pw;
+
+    ctx.fillStyle = '#2a3140';
+    ctx.fillRect(pad.l, barY, xNone - pad.l, barH);
+
+    var grad = ctx.createLinearGradient(xNone, 0, xFull, 0);
+    grad.addColorStop(0, '#f0b429'); grad.addColorStop(1, '#f0c455');
+    ctx.fillStyle = grad;
+    ctx.fillRect(xNone, barY, xFull - xNone, barH);
+
+    ctx.strokeStyle = '#3d4759';
+    ctx.strokeRect(pad.l + .5, barY + .5, pw - 1, barH - 1);
+
+    if (pNone > 0.14){
+      text(ctx, 'no six · ' + pNone.toFixed(3), (pad.l + xNone) / 2, barY + barH / 2, {align: 'center', baseline: 'middle', size: 11, color: '#8b95a5'});
+    } else {
+      text(ctx, 'no six', pad.l + 6, barY + barH / 2, {align: 'left', baseline: 'middle', size: 11, color: '#8b95a5'});
+    }
+    if (pAtLeast > 0.14){
+      text(ctx, '≥1 six · ' + pAtLeast.toFixed(3), (xNone + xFull) / 2, barY + barH / 2, {align: 'center', baseline: 'middle', size: 11, color: '#0f1218'});
+    }
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var x = pad.l + pw * v;
+      drawLine(ctx, x, barY + barH, x, barY + barH + 4);
+      text(ctx, v.toFixed(2), x, barY + barH + 6, {align: 'center', size: 10});
+    });
+  }
+
+  var sim = $('m2-sim');
+  var MAXN = 100000;
+  function drawSim(){
+    var g = setupCanvas(sim); var ctx = g.ctx;
+    var pad = { l: 42, r: 14, t: 16, b: 26 };
+    var pw = g.W - pad.l - pad.r, ph = g.H - pad.t - pad.b;
+    function xOf(k){ return pad.l + pw * (Math.log10(Math.max(k, 1)) / Math.log10(MAXN)); }
+    function yOf(v){ return pad.t + ph * (1 - Math.max(0, Math.min(1, v))); }
+    ctx.clearRect(0, 0, g.W, g.H);
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var y = Math.round(yOf(v)) + .5;
+      drawLine(ctx, pad.l, y, pad.l + pw, y);
+    });
+    [1, 10, 100, 1000, 10000, 100000].forEach(function(k){
+      var x = Math.round(xOf(k)) + .5;
+      drawLine(ctx, x, pad.t, x, pad.t + ph);
+    });
+    [0, .5, 1].forEach(function(v){ text(ctx, v.toFixed(2), pad.l - 7, yOf(v), {align: 'right', baseline: 'middle'}); });
+    [1, 10, 100, '1k', '10k', '100k'].forEach(function(l, i){ text(ctx, l, xOf(Math.pow(10, i)), pad.t + ph + 7, {align: 'center'}); });
+
+    var pTrue = 1 - Math.pow(5 / 6, S.n);
+    dashLine(ctx, pad.l, yOf(pTrue), pad.l + pw, yOf(pTrue), 'rgba(240,180,41,.8)', 1.5);
+    text(ctx, 'theory · ' + pTrue.toFixed(4), pad.l + 6, yOf(pTrue) - 4, {color: 'rgba(240,180,41,.9)', size: 10, baseline: 'bottom'});
+
+    if (S.simPath.length){
+      ctx.save();
+      ctx.strokeStyle = '#4cc9f0'; ctx.lineWidth = 1.75; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      var lastX = -1, started = false;
+      for (var i = 0; i < S.simPath.length; i++){
+        var k = S.simPath[i][0], v = S.simPath[i][1];
+        var x = xOf(k);
+        if (x - lastX >= 0.75 || i === S.simPath.length - 1){
+          var y = yOf(v);
+          if (!started){ ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+          lastX = x;
+        }
+      }
+      ctx.stroke(); ctx.restore();
+      var lk = S.simPath[S.simPath.length - 1];
+      dot(ctx, xOf(lk[0]), yOf(lk[1]), 4.5, '#0f1218');
+      dot(ctx, xOf(lk[0]), yOf(lk[1]), 3, '#4cc9f0');
+    }
+  }
+  function oneExp(){
+    for (var i = 0; i < S.n; i++) if (rand() < 1 / 6) return true;
+    return false;
+  }
+  function simStats(){
+    $('m2-sn').textContent = S.simExps.toLocaleString();
+    $('m2-sh').textContent = S.simHits.toLocaleString();
+    $('m2-sp').textContent = S.simExps ? (S.simHits / S.simExps).toFixed(4) : '—';
+  }
+  function runSim(count){
+    if (S.animating) return;
+    if (count === 0){ resetSim(); return; }
+    S.animating = true;
+    $$('#m2-btns .act').forEach(function(b){ if (b.dataset.n !== '0') b.disabled = true; });
+    var rem = count;
+    var chunk = Math.max(1, Math.ceil(count / 80));
+    (function step(){
+      var c = Math.min(chunk, rem);
+      for (var i = 0; i < c; i++){
+        S.simExps++;
+        if (oneExp()) S.simHits++;
+        S.simPath.push([S.simExps, S.simHits / S.simExps]);
+      }
+      rem -= c;
+      drawSim(); simStats();
+      if (rem > 0) requestAnimationFrame(step);
+      else {
+        S.animating = false;
+        $$('#m2-btns .act').forEach(function(b){ if (b.dataset.n !== '0') b.disabled = false; });
+        reflect();
+        markDone('m2');
+        setTimeout(function(){ showCompleteModal('At Least One'); }, 800);
+      }
+    })();
+  }
+  function resetSim(){
+    S.simExps = 0; S.simHits = 0; S.simPath = [];
+    $('m2-reflect').classList.remove('show');
+    simStats(); drawSim();
+  }
+  function reflect(){
+    var pTrue = 1 - Math.pow(5 / 6, S.n);
+    var emp = S.simHits / S.simExps;
+    var err = Math.abs(emp - pTrue);
+    var el = $('m2-reflect');
+    el.classList.add('show');
+    el.innerHTML = '<p style="margin:0;font-size:15px;color:#b3bcc9">After <b>' + S.simExps.toLocaleString() + '</b> experiments of ' + S.n + ' rolls each: empirical <b style="color:var(--txt)">' + emp.toFixed(4) + '</b> vs theory <b style="color:var(--accent)">' + pTrue.toFixed(4) + '</b>. Gap: <b>' + err.toFixed(4) + '</b>.</p>';
+  }
+
+  $('m2-n').oninput = function(e){
+    S.n = parseInt(e.target.value, 10);
+    $('m2-nv').textContent = S.n;
+    $('m2-pow').textContent = S.n;
+    $('m2-ans').textContent = (1 - Math.pow(5 / 6, S.n)).toFixed(4);
+    drawBar(); drawCurve(); resetSim();
+  };
+  $$('#m2-btns .act').forEach(function(b){
+    b.onclick = function(){ runSim(parseInt(b.dataset.n, 10)); };
+  });
+
+  $('m2-pow').textContent = S.n;
+  $('m2-ans').textContent = (1 - Math.pow(5 / 6, S.n)).toFixed(4);
+  $('m2-cv').classList.add('locked');
+  drawBar(); drawCurve(); drawSim();
+  return { onShow: function(){ drawBar(); drawCurve(); drawSim(); } };
+})();
+
+/* ============== M3 ============== */
+MODULES.m3 = (function(){
+  var S = { q1: null, q2: null, n: 0, bothRed: 0, atLeast: 0, animating: false, pathBR: [], pathAR: [] };
+
+  $$('#m3-q1 .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.q1 !== null) return;
+      S.q1 = parseInt(b.dataset.i, 10);
+      var correct = 1;
+      $$('#m3-q1 .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(S.q1 === correct ? 'right' : 'wrong');
+      if (S.q1 !== correct) $('#m3-q1 .choice[data-i="1"]').classList.add('right');
+      checkReveal();
+    };
+  });
+  $$('#m3-q2 .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.q2 !== null) return;
+      S.q2 = parseInt(b.dataset.i, 10);
+      var correct = 2;
+      $$('#m3-q2 .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(S.q2 === correct ? 'right' : 'wrong');
+      if (S.q2 !== correct) $('#m3-q2 .choice[data-i="2"]').classList.add('right');
+      checkReveal();
+    };
+  });
+
+  function checkReveal(){
+    if (S.q1 === null || S.q2 === null) return;
+    var el = $('m3-reveal');
+    el.classList.add('show');
+    el.innerHTML = '<p style="font-size:15px;margin:0 0 10px"><b>Q1.</b> P(both red) = (5/10) × (4/9) = 20/90 ≈ <b style="color:var(--accent)">0.2222</b>. The second factor is 4/9 because the bag is now 4 red out of 9.</p>' +
+      '<p style="font-size:15px;margin:0 0 10px"><b>Q2.</b> P(at least one red) = 1 − P(no red) = 1 − (5/10)(4/9) = <b style="color:var(--accent)">0.7778</b>.</p>' +
+      '<div class="formula">Rule for AND: multiply, and adjust the second factor\nRule for OR (at least one): use the complement</div>';
+    drawSim();
+  }
+
+  var cv = $('m3-cv');
+  function drawSim(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    var pad = { l: 42, r: 14, t: 16, b: 26 };
+    var pw = g.W - pad.l - pad.r, ph = g.H - pad.t - pad.b;
+    var MAX = 10000;
+    function xOf(k){ return pad.l + pw * (Math.log10(Math.max(k, 1)) / Math.log10(MAX)); }
+    function yOf(v){ return pad.t + ph * (1 - Math.max(0, Math.min(1, v))); }
+    ctx.clearRect(0, 0, g.W, g.H);
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var y = Math.round(yOf(v)) + .5;
+      drawLine(ctx, pad.l, y, pad.l + pw, y);
+    });
+    [1, 10, 100, 1000, 10000].forEach(function(k){
+      var x = Math.round(xOf(k)) + .5;
+      drawLine(ctx, x, pad.t, x, pad.t + ph);
+    });
+    [0, .5, 1].forEach(function(v){ text(ctx, v.toFixed(2), pad.l - 7, yOf(v), {align: 'right', baseline: 'middle'}); });
+    [1, 10, 100, '1k', '10k'].forEach(function(l, i){ text(ctx, l, xOf(Math.pow(10, i)), pad.t + ph + 7, {align: 'center'}); });
+
+    var pBR = 20 / 90, pAR = 7 / 9;
+    dashLine(ctx, pad.l, yOf(pBR), pad.l + pw, yOf(pBR), 'rgba(240,180,41,.8)', 1.5);
+    dashLine(ctx, pad.l, yOf(pAR), pad.l + pw, yOf(pAR), 'rgba(76,201,240,.7)', 1.5);
+    text(ctx, 'both red · ' + pBR.toFixed(4), pad.l + 6, yOf(pBR) - 4, {color: 'rgba(240,180,41,.9)', size: 10, baseline: 'bottom'});
+    text(ctx, '≥1 red · ' + pAR.toFixed(4), pad.l + 6, yOf(pAR) - 4, {color: 'rgba(76,201,240,.9)', size: 10, baseline: 'bottom'});
+
+    function drawPath(pts, color){
+      if (!pts.length) return;
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1.75; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      var lastX = -1, started = false;
+      for (var i = 0; i < pts.length; i++){
+        var k = pts[i][0], v = pts[i][1];
+        var x = xOf(k);
+        if (x - lastX >= 0.75 || i === pts.length - 1){
+          var y = yOf(v);
+          if (!started){ ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+          lastX = x;
+        }
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    drawPath(S.pathBR, '#f0b429');
+    drawPath(S.pathAR, '#4cc9f0');
+  }
+
+  function reset(){
+    S.n = 0; S.bothRed = 0; S.atLeast = 0;
+    S.pathBR = []; S.pathAR = [];
+    $('m3-reflect').classList.remove('show');
+    stats(); drawSim();
+  }
+  function stats(){
+    $('m3-n').textContent = S.n.toLocaleString();
+    $('m3-br').textContent = S.n ? (S.bothRed / S.n).toFixed(4) : '—';
+    $('m3-ar').textContent = S.n ? (S.atLeast / S.n).toFixed(4) : '—';
+  }
+  function runSim(count){
+    if (S.animating) return;
+    if (count === 0){ reset(); return; }
+    S.animating = true;
+    $$('#m3-btns .act').forEach(function(b){ if (b.dataset.n !== '0') b.disabled = true; });
+    var rem = count;
+    var chunk = Math.max(1, Math.ceil(count / 80));
+    (function step(){
+      var c = Math.min(chunk, rem);
+      for (var i = 0; i < c; i++){
+        S.n++;
+        var bag = ['R','R','R','R','R','B','B','B','B','B'];
+        var i1 = Math.floor(rand() * bag.length);
+        var d1 = bag.splice(i1, 1)[0];
+        var i2 = Math.floor(rand() * bag.length);
+        var d2 = bag[i2];
+        var both = d1 === 'R' && d2 === 'R';
+        var atL = d1 === 'R' || d2 === 'R';
+        if (both) S.bothRed++;
+        if (atL) S.atLeast++;
+        S.pathBR.push([S.n, S.bothRed / S.n]);
+        S.pathAR.push([S.n, S.atLeast / S.n]);
+      }
+      rem -= c;
+      drawSim(); stats();
+      if (rem > 0) requestAnimationFrame(step);
+      else {
+        S.animating = false;
+        $$('#m3-btns .act').forEach(function(b){ if (b.dataset.n !== '0') b.disabled = false; });
+        var el = $('m3-reflect');
+        el.classList.add('show');
+        el.innerHTML = '<p style="font-size:15px;color:#b3bcc9;margin:0">Empirical: both red <b style="color:var(--txt)">' + (S.bothRed / S.n).toFixed(4) + '</b> (theory 0.2222) · at least one red <b style="color:var(--txt)">' + (S.atLeast / S.n).toFixed(4) + '</b> (theory 0.7778).</p>';
+        markDone('m3');
+        setTimeout(function(){ showCompleteModal('The Two Rules'); }, 800);
+      }
+    })();
+  }
+  $$('#m3-btns .act').forEach(function(b){
+    b.onclick = function(){ runSim(parseInt(b.dataset.n, 10)); };
+  });
+  stats(); drawSim();
+  return { onShow: function(){ drawSim(); } };
+})();
+
+/* ============== M4 ============== */
+MODULES.m4 = (function(){
+  var S = { q1: null, q2: null, mode: 'smoker_given_young' };
+
+  $$('#m4-q1 .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.q1 !== null) return;
+      S.q1 = parseInt(b.dataset.i, 10);
+      $$('#m4-q1 .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(S.q1 === 1 ? 'right' : 'wrong');
+      if (S.q1 !== 1) $('#m4-q1 .choice[data-i="1"]').classList.add('right');
+      check();
+    };
+  });
+  $$('#m4-q2 .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.q2 !== null) return;
+      S.q2 = parseInt(b.dataset.i, 10);
+      $$('#m4-q2 .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(S.q2 === 2 ? 'right' : 'wrong');
+      if (S.q2 !== 2) $('#m4-q2 .choice[data-i="2"]').classList.add('right');
+      check();
+    };
+  });
+
+  function check(){
+    if (S.q1 === null || S.q2 === null) return;
+    var el = $('m4-reveal');
+    el.classList.add('show');
+    el.innerHTML = '<p style="font-size:15px;margin:0 0 10px"><b>Q1.</b> P(smoker | young) = 60 / 200 = <b style="color:var(--accent)">0.30</b>. We condition on young, so the denominator is 200.</p>' +
+      '<p style="font-size:15px;margin:0 0 10px"><b>Q2.</b> P(young | smoker) = 60 / 220 = <b style="color:var(--accent)">0.273</b>. We condition on smoker, so the denominator is 220.</p>' +
+      '<p style="font-size:14px;color:var(--mut);margin:10px 0 0">Same numerator (60). Different denominators.</p>';
+    drawTable();
+    updateFormula();
+    markDone('m4');
+    setTimeout(function(){ showCompleteModal('Conditional Probability'); }, 1200);
+  }
+
+  var cv = $('m4-cv');
+  function drawTable(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    ctx.clearRect(0, 0, g.W, g.H);
+    var cols = ['', 'Young', 'Older', 'Total'];
+    var rows = [
+      ['Smoker', 60, 160, 220],
+      ['Non-smoker', 140, 640, 780],
+      ['Total', 200, 800, 1000]
+    ];
+    var cellW = Math.min(140, (g.W - 40) / 4);
+    var cellH = 40;
+    var startX = (g.W - cellW * 4) / 2;
+    var startY = (g.H - cellH * 4) / 2 + 10;
+
+    for (var c = 0; c < 4; c++){
+      var xx = startX + c * cellW;
+      text(ctx, cols[c], xx + cellW / 2, startY - 14, {align: 'center', size: 11, color: '#8b95a5'});
+    }
+    for (var r = 0; r < 3; r++){
+      var y = startY + r * cellH;
+      for (var c2 = 0; c2 < 4; c2++){
+        var x = startX + c2 * cellW;
+        var isHeader = r === 2 || c2 === 3;
+        var isCorner = r === 2 && c2 === 3;
+        ctx.fillStyle = isCorner ? '#232a36' : isHeader ? '#1a1f28' : '#1e232d';
+        ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+        ctx.strokeStyle = '#2a3140';
+        ctx.strokeRect(x + .5, y + .5, cellW - 1, cellH - 1);
+        var val = c2 === 0 ? rows[r][0] : rows[r][c2];
+        if (c2 === 0){
+          text(ctx, val, x + 10, y + cellH / 2, {align: 'left', baseline: 'middle', size: 12, color: '#a9b3c2'});
+        } else {
+          text(ctx, val.toString(), x + cellW / 2, y + cellH / 2, {align: 'center', baseline: 'middle', size: 14, color: isHeader ? '#f0b429' : '#e8ecf1'});
+        }
+      }
+    }
+  }
+
+  function updateFormula(){
+    var el = $('m4-formula');
+    if (S.mode === 'smoker_given_young'){
+      el.innerHTML = 'P(smoker | young) = 60 / 200 = <span class="hl">0.300</span><br><span class="mut">denominator = all young people</span>';
+    } else {
+      el.innerHTML = 'P(young | smoker) = 60 / 220 = <span class="hl">0.273</span><br><span class="mut">denominator = all smokers</span>';
+    }
+  }
+  $('m4-b1').onclick = function(){
+    S.mode = 'smoker_given_young';
+    $('m4-b1').classList.add('primary');
+    $('m4-b2').classList.remove('primary');
+    updateFormula();
+  };
+  $('m4-b2').onclick = function(){
+    S.mode = 'young_given_smoker';
+    $('m4-b2').classList.add('primary');
+    $('m4-b1').classList.remove('primary');
+    updateFormula();
+  };
+  drawTable(); updateFormula();
+  return { onShow: function(){ drawTable(); updateFormula(); } };
+})();
+
+/* ============== M5 ============== */
+MODULES.m5 = (function(){
+  var S = { prev: 10, sens: 95, spec: 95 };
+
+  function updateAll(){
+    $('m5-prevv').textContent = (S.prev / 10).toFixed(1) + '%';
+    $('m5-sensv').textContent = S.sens + '%';
+    $('m5-specv').textContent = S.spec + '%';
+    draw();
+    var N = 10000;
+    var prev = S.prev / 1000;
+    var diseased = Math.round(N * prev);
+    var healthy = N - diseased;
+    var tp = Math.round(diseased * S.sens / 100);
+    var fp = Math.round(healthy * (100 - S.spec) / 100);
+    var total = tp + fp;
+    var ppv = total ? tp / total : 0;
+    $('m5-formula').innerHTML = 'P(disease | positive) = ' + tp + ' / (' + tp + ' + ' + fp + ') = <span class="hl">' + ppv.toFixed(3) + '</span><br><span class="mut">Among ' + total + ' positives, only ' + tp + ' truly have it.</span>';
+  }
+
+  var cv = $('m5-cv');
+  function draw(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    ctx.clearRect(0, 0, g.W, g.H);
+
+    var N = 10000;
+    var prev = S.prev / 1000;
+    var diseased = Math.round(N * prev);
+    var healthy = N - diseased;
+    var tp = Math.round(diseased * S.sens / 100);
+    var fp = Math.round(healthy * (100 - S.spec) / 100);
+    var fn = diseased - tp;
+    var tn = healthy - fp;
+
+    var cols = 100, rows = 100;
+    var cellW = g.W / cols, cellH = g.H / rows;
+
+    var diseaseSet = {};
+    for (var i = 0; i < diseased; i++) diseaseSet[i] = true;
+    var positiveSet = {};
+    var placed = 0;
+    for (var j = 0; j < diseased && placed < tp; j++){ positiveSet[j] = true; placed++; }
+    placed = 0;
+    for (var k = diseased; k < N && placed < fp; k++){ positiveSet[k] = true; placed++; }
+
+    for (var r = 0; r < rows; r++){
+      for (var c = 0; c < cols; c++){
+        var idx = r * cols + c;
+        if (idx >= N) continue;
+        var x = c * cellW, y = r * cellH;
+        var isD = diseaseSet[idx];
+        var isP = positiveSet[idx];
+        var color;
+        if (isD && isP) color = '#f0b429';
+        else if (isD && !isP) color = '#7a5a15';
+        else if (!isD && isP) color = '#f0645c';
+        else color = '#2a3140';
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, cellW + .5, cellH + .5);
+      }
+    }
+  }
+
+  $('m5-prev').oninput = function(e){ S.prev = parseInt(e.target.value, 10); updateAll(); };
+  $('m5-sens').oninput = function(e){ S.sens = parseInt(e.target.value, 10); updateAll(); };
+  $('m5-spec').oninput = function(e){ S.spec = parseInt(e.target.value, 10); updateAll(); };
+  updateAll();
+  return { onShow: function(){ updateAll(); } };
+})();
+
+/* ============== M6 ============== */
+MODULES.m6 = (function(){
+  var prize = 0, picked = null, hostOpen = null;
+  var played = 0, stayWins = 0, stayTot = 0, switchWins = 0, switchTot = 0;
+  var phase = 'pick';
+
+  function doorEls(){ return $$('#m6-doors .choice'); }
+  function resetGame(){
+    prize = Math.floor(rand() * 3);
+    picked = null; hostOpen = null;
+    phase = 'pick';
+    doorEls().forEach(function(b){
+      b.disabled = false;
+      b.classList.remove('on', 'right', 'wrong');
+      b.innerHTML = '🚪<div class="sub" style="margin-top:6px">Door ' + (parseInt(b.dataset.door, 10) + 1) + '</div>';
+    });
+    $('m6-msg').textContent = 'Pick a door to begin.';
+    $('m6-actions').style.display = 'none';
+  }
+  function pickDoor(i){
+    if (phase !== 'pick') return;
+    picked = i;
+    phase = 'decide';
+    var de = doorEls();
+    de[i].classList.add('on');
+    de[i].innerHTML = '🚪<div class="sub" style="margin-top:6px">Your pick</div>';
+    var opts = [0, 1, 2].filter(function(d){ return d !== i && d !== prize; });
+    hostOpen = opts[Math.floor(rand() * opts.length)];
+    de[hostOpen].innerHTML = '🐐<div class="sub" style="margin-top:6px">Goat</div>';
+    de.forEach(function(b, idx){
+      if (idx !== i && idx !== hostOpen) b.disabled = true;
+    });
+    de[hostOpen].disabled = true;
+    $('m6-msg').textContent = 'Host opens a goat door. Stay, or switch?';
+    $('m6-actions').style.display = 'flex';
+  }
+  function decide(switchIt){
+    var final = switchIt ? [0, 1, 2].find(function(d){ return d !== picked && d !== hostOpen; }) : picked;
+    var won = final === prize;
+    played++;
+    if (switchIt){ switchTot++; if (won) switchWins++; }
+    else { stayTot++; if (won) stayWins++; }
+    var de = doorEls();
+    de.forEach(function(b, idx){
+      if (idx === prize) b.innerHTML = '🎁<div class="sub" style="margin-top:6px">Prize</div>';
+      else if (idx !== hostOpen && idx !== final) b.innerHTML = '🐐<div class="sub" style="margin-top:6px">Goat</div>';
+      if (idx === final) b.classList.add(won ? 'right' : 'wrong');
+    });
+    $('m6-msg').textContent = won ? '🎉 You won!' : '😞 You lost.';
+    $('m6-actions').style.display = 'none';
+    updateStats();
+    setTimeout(resetGame, 1700);
+  }
+  doorEls().forEach(function(b){
+    b.onclick = function(){ pickDoor(parseInt(b.dataset.door, 10)); };
+  });
+  $('m6-stay').onclick = function(){ decide(false); };
+  $('m6-switch').onclick = function(){ decide(true); };
+
+  function updateStats(){
+    $('m6-pl').textContent = played;
+    $('m6-sw').textContent = stayWins + '/' + stayTot;
+    $('m6-sww').textContent = switchWins + '/' + switchTot;
+  }
+
+  var cv = $('m6-cv');
+  function drawCurve(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    var pad = { l: 52, r: 20, t: 20, b: 32 };
+    var pw = g.W - pad.l - pad.r, ph = g.H - pad.t - pad.b;
+    ctx.clearRect(0, 0, g.W, g.H);
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var y = Math.round(pad.t + ph * (1 - v)) + .5;
+      drawLine(ctx, pad.l, y, pad.l + pw, y);
+    });
+    [0, .25, .5, .75, 1].forEach(function(v){ text(ctx, v.toFixed(2), pad.l - 7, pad.t + ph * (1 - v), {align: 'right', baseline: 'middle'}); });
+
+    var groups = [
+      { label: 'Stay', win: stayWins, tot: stayTot, color: '#f0645c', theo: 1 / 3 },
+      { label: 'Switch', win: switchWins, tot: switchTot, color: '#43d17a', theo: 2 / 3 }
+    ];
+    var bw = pw / 3;
+    groups.forEach(function(gr, i){
+      var cx = pad.l + bw * (i + 0.5) + bw / 2;
+      var rate = gr.tot ? gr.win / gr.tot : 0;
+      var h = ph * rate;
+      ctx.fillStyle = gr.color;
+      ctx.fillRect(cx - bw * 0.35, pad.t + ph - h, bw * 0.7, h);
+      text(ctx, gr.label, cx, pad.t + ph + 8, {align: 'center', size: 13, color: '#c9d1dc'});
+      text(ctx, gr.tot ? gr.win + '/' + gr.tot : '—', cx, pad.t + ph + 26, {align: 'center', size: 11, color: '#8b95a5'});
+      text(ctx, rate.toFixed(3), cx, pad.t + ph - h - 16, {align: 'center', size: 13, color: gr.color});
+      var ty = pad.t + ph * (1 - gr.theo);
+      dashLine(ctx, cx - bw * 0.35, ty, cx + bw * 0.35, ty, 'rgba(255,255,255,.35)', 1);
+    });
+  }
+  function runSim(){
+    stayWins = stayTot = switchWins = switchTot = 0;
+    var N = 10000;
+    for (var i = 0; i < N; i++){
+      var p = Math.floor(rand() * 3);
+      var pick = Math.floor(rand() * 3);
+      var opts = [0, 1, 2].filter(function(d){ return d !== pick && d !== p; });
+      var open = opts[Math.floor(rand() * opts.length)];
+      stayTot++; if (pick === p) stayWins++;
+      switchTot++;
+      var sw = [0, 1, 2].find(function(d){ return d !== pick && d !== open; });
+      if (sw === p) switchWins++;
+    }
+    updateStats();
+    drawCurve();
+    var el = $('m6-reflect');
+    el.classList.add('show');
+    el.innerHTML = '<p style="font-size:15px;color:#b3bcc9;margin:0">After 10,000 simulations each: staying wins <b style="color:var(--txt)">' + (stayWins / 10000).toFixed(4) + '</b> (theory 0.3333) · switching wins <b style="color:var(--txt)">' + (switchWins / 10000).toFixed(4) + '</b> (theory 0.6667).</p>';
+    markDone('m6');
+    setTimeout(function(){ showCompleteModal('Monty Hall'); }, 900);
+  }
+  $('m6-sim').onclick = runSim;
+  $('m6-reset').onclick = function(){
+    played = 0; stayWins = stayTot = switchWins = switchTot = 0;
+    updateStats(); drawCurve();
+    $('m6-reflect').classList.remove('show');
+    resetGame();
+  };
+  resetGame(); updateStats(); drawCurve();
+  return { onShow: function(){ drawCurve(); } };
+})();
+
+/* ============== M7 ============== */
+MODULES.m7 = (function(){
+  var S = { n: 23, rooms: 0, hits: 0 };
+
+  function birthdayP(n){
+    if (n > 365) return 1;
+    var p = 1;
+    for (var i = 0; i < n; i++) p *= (365 - i) / 365;
+    return 1 - p;
+  }
+
+  $$('#m7-guess .choice').forEach(function(b){
+    b.onclick = function(){
+      var i = parseInt(b.dataset.i, 10);
+      $$('#m7-guess .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(i === 0 ? 'right' : 'wrong');
+      if (i !== 0) $('#m7-guess .choice[data-i="0"]').classList.add('right');
+      var el = $('m7-reveal');
+      el.classList.add('show');
+      el.innerHTML = '<p style="font-size:15px;margin:0">The answer is <b style="color:var(--accent)">23</b>. P(shared birthday) = ' + birthdayP(23).toFixed(4) + ' ≈ 50.7%. With 23 people there are 253 pairs — that is why the count is so small.</p>';
+      markDone('m7');
+    };
+  });
+
+  var cv = $('m7-cv');
+  function drawCurve(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    var pad = { l: 42, r: 14, t: 16, b: 28 };
+    var pw = g.W - pad.l - pad.r, ph = g.H - pad.t - pad.b;
+    function xOf(n){ return pad.l + pw * ((n - 2) / 78); }
+    function yOf(v){ return pad.t + ph * (1 - v); }
+    ctx.clearRect(0, 0, g.W, g.H);
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var y = Math.round(yOf(v)) + .5;
+      drawLine(ctx, pad.l, y, pad.l + pw, y);
+    });
+    [2, 10, 20, 23, 30, 40, 60, 80].forEach(function(n){
+      var x = Math.round(xOf(n)) + .5;
+      drawLine(ctx, x, pad.t, x, pad.t + ph);
+    });
+    [0, .5, 1].forEach(function(v){ text(ctx, v.toFixed(2), pad.l - 7, yOf(v), {align: 'right', baseline: 'middle'}); });
+    [2, 10, 20, 23, 30, 40, 60, 80].forEach(function(n){ text(ctx, n, xOf(n), pad.t + ph + 7, {align: 'center'}); });
+
+    ctx.save(); ctx.strokeStyle = '#f0b429'; ctx.lineWidth = 2.25;
+    ctx.beginPath();
+    for (var n = 2; n <= 80; n++){
+      var v = birthdayP(n);
+      var x = xOf(n), y = yOf(v);
+      if (n === 2) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+
+    dashLine(ctx, pad.l, yOf(0.5), pad.l + pw, yOf(0.5), 'rgba(255,255,255,.35)', 1);
+    text(ctx, '50%', pad.l + 6, yOf(0.5) - 4, {size: 10, baseline: 'bottom'});
+
+    var p23 = birthdayP(23);
+    dot(ctx, xOf(23), yOf(p23), 6, '#0f1218');
+    dot(ctx, xOf(23), yOf(p23), 4, '#f0b429');
+    text(ctx, 'n=23 → ' + (p23 * 100).toFixed(1) + '%', xOf(23) + 8, yOf(p23) - 6, {size: 11, color: '#f0b429', baseline: 'bottom'});
+
+    var cn = S.n;
+    if (cn >= 2 && cn <= 80){
+      var vv = birthdayP(cn);
+      dot(ctx, xOf(cn), yOf(vv), 4, '#0f1218');
+      dot(ctx, xOf(cn), yOf(vv), 2.5, '#4cc9f0');
+    }
+  }
+
+  function updateFormula(){
+    var n = S.n;
+    var p = birthdayP(n);
+    var pairs = n * (n - 1) / 2;
+    $('m7-formula').innerHTML = 'P(≥1 shared birthday among ' + n + ') = <span class="hl">' + p.toFixed(4) + '</span><br><span class="mut">Pairs in the room: ' + pairs + '</span>';
+    $('m7-nv').textContent = n;
+    drawCurve();
+  }
+  $('m7-n').oninput = function(e){
+    S.n = parseInt(e.target.value, 10);
+    S.rooms = 0; S.hits = 0;
+    $('m7-rooms').textContent = 0;
+    $('m7-hits').textContent = 0;
+    $('m7-emp').textContent = '—';
+    updateFormula();
+  };
+  $('m7-sim').onclick = function(){
+    S.rooms = 0; S.hits = 0;
+    var N = 1000;
+    var target = S.n;
+    for (var r = 0; r < N; r++){
+      var seen = {};
+      var match = false;
+      for (var i = 0; i < target; i++){
+        var bd = Math.floor(rand() * 365);
+        if (seen[bd]){ match = true; break; }
+        seen[bd] = true;
+      }
+      S.rooms++;
+      if (match) S.hits++;
+    }
+    $('m7-rooms').textContent = S.rooms;
+    $('m7-hits').textContent = S.hits;
+    $('m7-emp').textContent = (S.hits / S.rooms).toFixed(4);
+    markDone('m7');
+  };
+  updateFormula();
+  return { onShow: function(){ drawCurve(); } };
+})();
+
+/* ============== M8 ============== */
+MODULES.m8 = (function(){
+  var S = { n: 0, total: 0, path: [] };
+  var cv = $('m8-cv');
+  function draw(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    var pad = { l: 50, r: 14, t: 16, b: 26 };
+    var pw = g.W - pad.l - pad.r, ph = g.H - pad.t - pad.b;
+    var MAX = 100000;
+    function xOf(k){ return pad.l + pw * (Math.log10(Math.max(k, 1)) / Math.log10(MAX)); }
+    var yMin = -2, yMax = 2;
+    function yOf(v){ return pad.t + ph * (1 - (Math.max(yMin, Math.min(yMax, v)) - yMin) / (yMax - yMin)); }
+    ctx.clearRect(0, 0, g.W, g.H);
+    [-2, -1, 0, 1, 2].forEach(function(v){
+      var y = Math.round(yOf(v)) + .5;
+      drawLine(ctx, pad.l, y, pad.l + pw, y);
+    });
+    [1, 10, 100, 1000, 10000, 100000].forEach(function(k){
+      var x = Math.round(xOf(k)) + .5;
+      drawLine(ctx, x, pad.t, x, pad.t + ph);
+    });
+    [-2, -1, 0, 1, 2].forEach(function(v){ text(ctx, v.toFixed(1), pad.l - 7, yOf(v), {align: 'right', baseline: 'middle'}); });
+    [1, 10, 100, '1k', '10k', '100k'].forEach(function(l, i){ text(ctx, l, xOf(Math.pow(10, i)), pad.t + ph + 7, {align: 'center'}); });
+
+    dashLine(ctx, pad.l, yOf(0.5), pad.l + pw, yOf(0.5), 'rgba(240,180,41,.8)', 1.5);
+    text(ctx, 'EV = +0.50 per game', pad.l + 6, yOf(0.5) - 4, {color: 'rgba(240,180,41,.9)', size: 10, baseline: 'bottom'});
+
+    if (S.path.length){
+      ctx.save(); ctx.strokeStyle = '#4cc9f0'; ctx.lineWidth = 1.75; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      var lastX = -1, started = false;
+      for (var i = 0; i < S.path.length; i++){
+        var k = S.path[i][0], v = S.path[i][1];
+        var x = xOf(k);
+        if (x - lastX >= 0.75 || i === S.path.length - 1){
+          var y = yOf(v);
+          if (!started){ ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+          lastX = x;
+        }
+      }
+      ctx.stroke(); ctx.restore();
+      var lk = S.path[S.path.length - 1];
+      dot(ctx, xOf(lk[0]), yOf(lk[1]), 4.5, '#0f1218');
+      dot(ctx, xOf(lk[0]), yOf(lk[1]), 3, '#4cc9f0');
+    }
+  }
+  function stats(){
+    $('m8-n').textContent = S.n.toLocaleString();
+    $('m8-tot').textContent = (S.total >= 0 ? '+' : '') + S.total;
+    $('m8-avg').textContent = S.n ? (S.total / S.n).toFixed(3) : '—';
+  }
+  function play(count){
+    for (var i = 0; i < count; i++){
+      S.n++;
+      var roll = 1 + Math.floor(rand() * 6);
+      S.total += roll - 3;
+      var stride = Math.max(1, Math.floor(count / 200));
+      if (i % stride === 0 || i === count - 1){
+        S.path.push([S.n, S.total / S.n]);
+      }
+    }
+    stats(); draw();
+    if (S.n >= 1000){
+      markDone('m8');
+      setTimeout(function(){ showCompleteModal('Expected Value'); }, 700);
+    }
+  }
+  $('m8-one').onclick = function(){ play(1); };
+  $('m8-hundred').onclick = function(){ play(100); };
+  $('m8-thousand').onclick = function(){ play(1000); };
+  $('m8-tenk').onclick = function(){ play(10000); };
+  $('m8-reset').onclick = function(){ S.n = 0; S.total = 0; S.path = []; stats(); draw(); };
+  stats(); draw();
+  return { onShow: function(){ draw(); } };
+})();
+
+/* ============== M9 ============== */
+MODULES.m9 = (function(){
+  var S = { n: 20, p: 0.5 };
+
+  function binom(k, n, p){
+    if (k < 0 || k > n) return 0;
+    var lp = 0;
+    for (var i = 0; i < k; i++) lp += Math.log(n - i) - Math.log(i + 1);
+    return Math.exp(lp + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  }
+  function updateStats(){
+    var mean = S.n * S.p;
+    var sd = Math.sqrt(S.n * S.p * (1 - S.p));
+    $('m9-mean').textContent = mean.toFixed(2);
+    $('m9-sd').textContent = sd.toFixed(3);
+    var lo = Math.max(0, Math.floor(mean - sd));
+    var hi = Math.min(S.n, Math.ceil(mean + sd));
+    var pr = 0;
+    for (var k = lo; k <= hi; k++) pr += binom(k, S.n, S.p);
+    $('m9-sigma').textContent = pr.toFixed(3);
+  }
+  var cv = $('m9-cv');
+  function draw(){
+    var g = setupCanvas(cv); var ctx = g.ctx;
+    var pad = { l: 40, r: 14, t: 16, b: 28 };
+    var pw = g.W - pad.l - pad.r, ph = g.H - pad.t - pad.b;
+    ctx.clearRect(0, 0, g.W, g.H);
+
+    var n = S.n, p = S.p;
+    var mean = n * p, sd = Math.sqrt(n * p * (1 - p));
+    var lo = Math.max(0, Math.floor(mean - 4 * sd));
+    var hi = Math.min(n, Math.ceil(mean + 4 * sd));
+    if (hi <= lo) hi = lo + 1;
+
+    function xOf(k){ return pad.l + pw * ((k - lo + 1) / (hi - lo + 3)); }
+
+    var maxP = 0;
+    for (var k = lo; k <= hi; k++) maxP = Math.max(maxP, binom(k, n, p));
+    if (maxP === 0) maxP = 1;
+
+    [0, .25, .5, .75, 1].forEach(function(v){
+      var y = Math.round(pad.t + ph * v) + .5;
+      drawLine(ctx, pad.l, y, pad.l + pw, y);
+    });
+
+    var barW = pw / (hi - lo + 1) * 0.85;
+    for (var k2 = lo; k2 <= hi; k2++){
+      var pk = binom(k2, n, p);
+      var x = xOf(k2) - barW / 2;
+      var h = ph * (pk / maxP);
+      var y = pad.t + ph - h;
+      ctx.fillStyle = 'rgba(240,180,41,.75)';
+      ctx.fillRect(x, y, barW, h);
+    }
+
+    var normPeak = 1 / (sd * Math.sqrt(2 * Math.PI));
+    if (normPeak > 0){
+      ctx.save();
+      ctx.strokeStyle = '#4cc9f0'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      var steps = 200;
+      var kMin = lo - 0.5, kMax = hi + 0.5;
+      for (var i = 0; i <= steps; i++){
+        var kk = kMin + (kMax - kMin) * i / steps;
+        var dens = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-Math.pow(kk - mean, 2) / (2 * sd * sd));
+        var yy = pad.t + ph - ph * (dens / normPeak);
+        var xx = pad.l + pw * ((kk - lo + 1) / (hi - lo + 3));
+        if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+      }
+      ctx.stroke(); ctx.restore();
+    }
+
+    text(ctx, 'k', pad.l + pw - 8, pad.t + ph + 7, {align: 'right', size: 11});
+    text(ctx, 'mean=' + mean.toFixed(1), pad.l + 6, pad.t + 4, {size: 11, color: '#8b95a5'});
+    var step = Math.max(1, Math.round((hi - lo) / 6));
+    for (var k3 = lo; k3 <= hi; k3 += step){
+      text(ctx, k3, xOf(k3), pad.t + ph + 7, {align: 'center', size: 10});
+    }
+  }
+  $('m9-n').oninput = function(e){ S.n = parseInt(e.target.value, 10); $('m9-nv').textContent = S.n; draw(); updateStats(); };
+  $('m9-p').oninput = function(e){ S.p = parseInt(e.target.value, 10) / 100; $('m9-pv').textContent = S.p.toFixed(2); draw(); updateStats(); };
+  draw(); updateStats();
+  return { onShow: function(){ draw(); updateStats(); } };
+})();
+
+/* ============== M10 ============== */
+MODULES.m10 = (function(){
+  var S = { q1: null, q2: null, q3: null };
+
+  $$('#m10-q1 .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.q1 !== null) return;
+      S.q1 = parseInt(b.dataset.i, 10);
+      $$('#m10-q1 .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(S.q1 === 1 ? 'right' : 'wrong');
+      if (S.q1 !== 1) $('#m10-q1 .choice[data-i="1"]').classList.add('right');
+      var el = $('m10-r1');
+      el.classList.add('show');
+      el.innerHTML = '<p style="font-size:15px;margin:0">Still 50%. Independent spins have no memory. <b>Regression to the mean</b> is the real phenomenon: unusual streaks are followed by ordinary results, not because the wheel "corrects" itself, but because unusual things are, by definition, rare.</p>';
+      check();
+    };
+  });
+  $$('#m10-q2 .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.q2 !== null) return;
+      S.q2 = parseInt(b.dataset.i, 10);
+      $$('#m10-q2 .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(S.q2 === 0 ? 'right' : 'wrong');
+      if (S.q2 !== 0) $('#m10-q2 .choice[data-i="0"]').classList.add('right');
+      var el = $('m10-r2');
+      el.classList.add('show');
+      el.innerHTML = '<p style="font-size:15px;margin:0">A is more likely. B <em>requires</em> A (every feminist bank teller is a bank teller), so P(B) ≤ P(A). This is the <b>conjunction fallacy</b> — Kahneman and Tversky\'s classic. A richer story feels more likely; it never is.</p>';
+      check();
+    };
+  });
+  $$('#m10-q3 .choice').forEach(function(b){
+    b.onclick = function(){
+      if (S.q3 !== null) return;
+      S.q3 = parseInt(b.dataset.i, 10);
+      $$('#m10-q3 .choice').forEach(function(x){ x.disabled = true; });
+      b.classList.add(S.q3 === 2 ? 'right' : 'wrong');
+      if (S.q3 !== 2) $('#m10-q3 .choice[data-i="2"]').classList.add('right');
+      var el = $('m10-r3');
+      el.classList.add('show');
+      el.innerHTML = '<p style="font-size:15px;margin:0">Roughly <b>9%</b>. Out of 100,000 people: 100 have the disease, about 99 test positive. 99,900 are healthy, and 1% of them (about 999) also test positive. Of the 1,098 positives, only 99 are true. P(disease | positive) = 99/1098 ≈ 0.09. That is the base-rate fallacy — same structure as Module 5.</p>';
+      check();
+    };
+  });
+
+  function check(){
+    if (S.q1 !== null && S.q2 !== null && S.q3 !== null){
+      markDone('m10');
+      setTimeout(function(){ showCompleteModal('Fallacies & Traps'); }, 900);
+    }
+  }
+  return {};
+})();
+
+/* ============== BOOT ============== */
+function boot(){
+  buildNav();
+  var initial = (location.hash || '').slice(1) || 'm1';
+  show(initial);
+  window.addEventListener('resize', function(){
+    var mod = MODULES[current];
+    if (mod && mod.onShow) mod.onShow();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    var i = ORDER.indexOf(current);
+    if (e.key === 'ArrowRight' && i < ORDER.length - 1) show(ORDER[i + 1]);
+    if (e.key === 'ArrowLeft' && i > 0) show(ORDER[i - 1]);
+  });
+}
+
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+</script>
+</body>
+</html>
